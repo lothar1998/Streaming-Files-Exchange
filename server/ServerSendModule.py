@@ -1,16 +1,12 @@
 from typing import Dict, List
-import concurrent.futures
 
 
 class ServerSendModule:
-    def __init__(self, ip_address, port, client_socket, clients_queue: Dict[str, List], client_address, client_id):
+    def __init__(self, client_socket, clients_queue: Dict[str, List], client_address, client_id):
         self.client_id = client_id
-        self.ip_address = ip_address
-        self.port = port
         self.client_socket = client_socket
         self.clients_queue = clients_queue
         self.client_address = client_address
-        self.thread_pool = None
 
     def send_message_to_client(self, sender_id, receiver_id, file_to_send):
         # set this client Busy
