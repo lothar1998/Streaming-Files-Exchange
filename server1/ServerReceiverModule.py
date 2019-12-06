@@ -20,7 +20,7 @@ class ServerReceiverModule:
 
         while True:
             data = self.client_socket.recv(buffer_size).decode('utf-8')
-            cli_2_id, file_name = self.parse_msg(data)
+            cli_2_id = data
 
             cli_2_id = int(cli_2_id)
 

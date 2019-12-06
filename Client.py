@@ -16,13 +16,15 @@ def sender_thread(client):
         if client.is_finished:
             break
 
-        to_send = str(client.client_receiver_id) + ";" + str(client.file_path)
+        to_send = str(client.client_receiver_id)
         client.client_socket.send(to_send.encode())
 
         client.condition_send.clear()
         client.condition_send.wait()
 
         if not client.is_receiver_client_busy:
+            to_send = str(client.file_path)
+            client.client_socket.send(to_send.encode())
             file = open(client.file_path, "r")
             line = file.readline()
             while line:
@@ -45,8 +47,8 @@ def receiver_thread(client):
             client.is_receiver_client_busy = False
             client.condition_send.set()
         else:
-            (client_id, file_name) = parse_first_msg(data)
-            print(client_id)
+
+            file_name = data
             print(file_name)
             file = open(file_name, "a+")
             while True:
@@ -97,6 +99,6 @@ if __name__ == "__main__":
     client_module = Client("127.0.0.1", 6969)
     client_module.initiate_connection()
     time.sleep(3)
-    client_module.send_file("README.md", 69571)
+    client_module.send_file("README.md", 174238)
     time.sleep(100)
     client_module.close_connection()

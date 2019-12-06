@@ -45,8 +45,7 @@ def receiver_thread(client):
             client.is_receiver_client_busy = False
             client.condition_send.set()
         else:
-            (client_id, file_name) = parse_first_msg(data)
-            print(client_id)
+            file_name = data
             print(file_name)
             file = open(file_name, "a+")
             while True:
@@ -96,6 +95,5 @@ class Client:
 if __name__ == "__main__":
     client_module = Client("127.0.0.1", 6969)
     client_module.initiate_connection()
-    time.sleep(100)
     time.sleep(100)
     client_module.close_connection()
