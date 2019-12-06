@@ -96,6 +96,6 @@ class Client:
 if __name__ == "__main__":
     client_module = Client("127.0.0.1", 6969)
     client_module.initiate_connection()
-    time.sleep(3)
-    time.sleep(30)
+    time.sleep(100)
+    time.sleep(100)
     client_module.close_connection()

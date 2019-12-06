@@ -11,8 +11,8 @@ class ServerSendModule:
 
     def _send_to_client(self):
         while True:
-            data = self.clients_dict[f'{self.client_id}'][2].get()
-            self.client_socket.send(bytes(data))
+            data = self.clients_dict[self.client_id][2].get()
+            self.client_socket.send(data.encode())
 
     def execute(self):
         self._send_to_client()
