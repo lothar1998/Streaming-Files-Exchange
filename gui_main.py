@@ -39,6 +39,11 @@ class gui():
     def send_file_tcp(self):
         print("Sending file")
 
+    def add_destination_id(self):
+        destination_id = self.txt_destinaiton.get()
+        print(destination_id)
+
+
     def __init__(self):
         self.my_ID = '           user_1          '
 
@@ -83,6 +88,10 @@ class gui():
 
         self.txt_destinaiton = Entry(self.window, width=17, justify=CENTER, bd=5, font=("Arial Bold", 18))
         self.txt_destinaiton.grid(column=1, row=7)
+
+        self.destination_button = Button(self.window, text="Add", command=self.add_destination_id, height=2, width=5,
+                                        padx=10)
+        self.destination_button.grid(column=3, row=7)
 
         self.empty_lbl_3 = Label(self.window, text="", font=("Arial Bold", 20))
         self.empty_lbl_3.grid(column=0, row=7)
