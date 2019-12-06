@@ -45,9 +45,7 @@ class gui():
 
 
     def __init__(self):
-        self.my_ID = '           user_1          '
-
-        closed = False
+        self.my_ID = 'gozdecki'
 
         self.window = Tk()
         self.window.title('Kugburkalimetr')
@@ -80,7 +78,7 @@ class gui():
         self.your_id_label = Label(self.window, text="Your ID", font=("Arial Bold", 20))
         self.your_id_label.grid(column=0, row=4)
 
-        self.empty_lbl_2 = Label(self.window, text="", font=("Arial Bold", 20))
+        self.empty_lbl_2 = Label(self.window, text="", justify=CENTER, font=("Arial Bold", 20))
         self.empty_lbl_2.grid(column=0, row=5)
 
         self.destination_id_label = Label(self.window, text="Destination ID ", font=("Arial Bold", 20))
