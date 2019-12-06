@@ -19,10 +19,12 @@ class ServerReceiveModule:
 
         # Receive data in chunks
         buffer_size = 16
-        block: Event = self.clients_queue[f'{self.client_id}'][4]
+        # take block from sender
+        block: Event = self.clients_queue[f'{sender_id}'][4]
         while True:
             data = client_socket.recv(buffer_size)
 
+            # TODO: should wait
             # If didn't get any data from client
             if not len(data):
                 return False

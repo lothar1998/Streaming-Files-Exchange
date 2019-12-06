@@ -16,23 +16,24 @@ class ServerReceiverModule:
 
     def receive_data(self):
         while True:
-            q: queue.Queue = self.clients_dict[f'{self.client_id}'][2]
-            data = q.get()
+            this_cli_q: queue.Queue = self.clients_dict[f'{self.client_id}'][2]
+            data = this_cli_q.get()
             cli_2_id, file_name = self.parse_msg(data)
 
-            cli_2_data: list = self.clients_dict[f'{cli_2_id}']
-
-            if cli_2_data[1]:
-                this_cli_q: queue.Queue = self.clients_dict[f'{self.client_id}'][2]
+            # Check if cli_2 is busy
+            if self.clients_dict[f'{cli_2_id}'][1]:
                 this_cli_q.put('BUSY')
+                # ??
                 continue
             else:
-                this_cli_q: queue.Queue = self.clients_dict[f'{self.client_id}'][2]
+                self.clients_dict[f'{cli_2_id}'][1] = True
                 this_cli_q.put('NOT_BUSY')
+                this_cli_q = self.clients_dict[f'{cli_2_id}'][2]
 
                 buffer_size = 16
                 while True:
                     data = self.client_socket.recv(buffer_size).decode('utf-8')
-                    cli_2_data[2].put(data)
+                    this_cli_q.put(data)
                     if data == 'END':
+                        self.clients_dict[f'{cli_2_id}'][1] = False
                         break
