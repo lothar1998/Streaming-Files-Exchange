@@ -1,43 +1,42 @@
 from typing import Dict, List
+from threading import Event
+
+STOP_Q_MSG = "STOP"
 
 
+# Dict(thread_pool, handler, isBusy, queue, block)
 class ServerSendModule:
     def __init__(self, client_socket, clients_queue: Dict[str, List], client_address, client_id):
         self.client_id = client_id
         self.client_socket = client_socket
         self.clients_queue = clients_queue
         self.client_address = client_address
+        self.clients_queue[f'{client_id}'][1] = self.thread_queue_handler
+        self.clients_queue[f'{client_id}'][2] = False
 
-    def send_message_to_client(self, sender_id, receiver_id, file_to_send):
-        # set this client Busy
-        cli_info = f"Client with ip {self.client_address} and id: {sender_id} has connected to the server"
+    def send_to_client(self, receiver_id, file_name):
+        cli_info = f"Client with ip {self.client_address} and id: {self.client_id} has connected to the server"
 
         self.client_socket.send(bytes(cli_info, 'utf-8'))
 
-        # check if client is busy
-        if self.clients_queue[f'{receiver_id}'][2]:
-            print(f"Client_{receiver_id} is Busy")
-            return False
+        # Run handler
+        self.clients_queue[f'{receiver_id}'][1](receiver_id, file_name)
 
-        # set sender_id and get queue
-        receiver_q = self.clients_queue[f'{receiver_id}'][1](sender_id)
-
-        receiver_q.put(file_to_send)
-
-        print("Loaded whole file bytes to queue")
-        receiver_q.put(None)
-
-        # Unlock this client
-        self.clients_queue[f'{self.clients_queue}'][2] = False
-
-    def thread_queue_handler(self, other_cli_id):
-        self.clients_queue[f'{self.clients_queue}'][2] = True
-        self.clients_queue[f'{self.client_id}'][3] = self.clients_queue[f'{other_cli_id}'][3]
-        q = self.clients_queue[f'{self.client_id}'][3]
+    def thread_queue_handler(self, receiver_id, file_name):
+        self.clients_queue[f'{self.client_id}'][3] = self.clients_queue[f'{receiver_id}'][3]
+        q = self.clients_queue[f'{receiver_id}'][3]
         while True:
+            block: Event = self.clients_queue[f'{self.client_id}'][4]
+            block.wait()
+            self.clients_queue[f'{self.clients_queue}'][2] = True
             data = q.get()
-            self.client_socket.send(data)
-            if data is None:
-                msg = f'Received full data'
+            if data == STOP_Q_MSG:
+                msg = f'file {file_name} has been sent'
                 self.client_socket.send(bytes(msg, 'utf-8'))
-                self.clients_queue[f'{self.clients_queue}'][2] = False
+                self.client_socket.close()
+                block.clear()
+                return msg
+
+            self.client_socket.send(bytes(data, 'utf-8'))
+            block.clear()
+            self.clients_queue[f'{self.clients_queue}'][2] = False

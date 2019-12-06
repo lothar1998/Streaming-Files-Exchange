@@ -3,9 +3,10 @@ from typing import Dict, List
 import queue
 
 
+# Dict(thread_pool, handler, isBusy, queue, block)
 class ServerReceiveModule:
-    def __init__(self, client_id, clients_queue: Dict[str, List] = None):
-        self.clients_queue = None
+    def __init__(self, client_id, clients_queue: Dict[str, List]):
+        self.clients_queue = clients_queue
         self.client_id = client_id
         self.clients_queue[f'{self.client_id}'][3] = queue.Queue()
 
@@ -30,3 +31,9 @@ class ServerReceiveModule:
                 print(f"Received whole message from {client_socket}")
                 self.clients_queue[f'{self.client_id}'][3].put(None)
                 break
+
+# TODO: check if client is busy
+
+# if self.clients_queue[f'{receiver_id}'][2]:
+#     print(f"Client_{receiver_id} is Busy")
+#     return False
