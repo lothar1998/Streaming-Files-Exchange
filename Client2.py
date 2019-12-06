@@ -4,11 +4,6 @@ import threading
 import time
 
 
-def parse_first_msg(data):
-    client_id, file_name = data.split(sep=';')
-    return client_id, file_name
-
-
 def sender_thread(client):
     while True:
         client.condition_send.wait()
@@ -16,13 +11,15 @@ def sender_thread(client):
         if client.is_finished:
             break
 
-        to_send = str(client.client_receiver_id) + ";" + str(client.file_path)
+        to_send = str(client.client_receiver_id)
         client.client_socket.send(to_send.encode())
 
         client.condition_send.clear()
         client.condition_send.wait()
 
         if not client.is_receiver_client_busy:
+            to_send = str(client.file_path)
+            client.client_socket.send(to_send.encode())
             file = open(client.file_path, "r")
             line = file.readline()
             while line:
@@ -45,6 +42,7 @@ def receiver_thread(client):
             client.is_receiver_client_busy = False
             client.condition_send.set()
         else:
+
             file_name = data
             print(file_name)
             file = open(file_name, "a+")
@@ -95,5 +93,6 @@ class Client:
 if __name__ == "__main__":
     client_module = Client("127.0.0.1", 6969)
     client_module.initiate_connection()
+    time.sleep(3)
     time.sleep(100)
     client_module.close_connection()

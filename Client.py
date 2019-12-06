@@ -3,12 +3,6 @@ import concurrent.futures
 import threading
 import time
 
-
-def parse_first_msg(data):
-    client_id, file_name = data.split(sep=';')
-    return client_id, file_name
-
-
 def sender_thread(client):
     while True:
         client.condition_send.wait()
@@ -99,6 +93,6 @@ if __name__ == "__main__":
     client_module = Client("127.0.0.1", 6969)
     client_module.initiate_connection()
     time.sleep(3)
-    client_module.send_file("README.md", 174238)
+    client_module.send_file("README.md", 3455)
     time.sleep(100)
     client_module.close_connection()
