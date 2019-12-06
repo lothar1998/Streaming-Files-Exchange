@@ -15,9 +15,11 @@ class ServerReceiverModule:
         return data.split(sep=';')
 
     def receive_data(self):
+        buffer_size = 16
+        this_cli_q: queue.Queue = self.clients_dict[f'{self.client_id}'][2]
+
         while True:
-            this_cli_q: queue.Queue = self.clients_dict[f'{self.client_id}'][2]
-            data = this_cli_q.get()
+            data = self.client_socket.recv(buffer_size).decode('utf-8')
             cli_2_id, file_name = self.parse_msg(data)
 
             # Check if cli_2 is busy
@@ -27,12 +29,12 @@ class ServerReceiverModule:
             else:
                 self.clients_dict[f'{cli_2_id}'][1] = True
                 this_cli_q.put('NOT_BUSY')
-                this_cli_q = self.clients_dict[f'{cli_2_id}'][2]
 
-                buffer_size = 16
+                cli_2_q = self.clients_dict[f'{cli_2_id}'][2]
+
                 while True:
                     data = self.client_socket.recv(buffer_size).decode('utf-8')
-                    this_cli_q.put(data)
+                    cli_2_q.put(data)
                     if data == 'END':
                         self.clients_dict[f'{cli_2_id}'][1] = False
                         break
