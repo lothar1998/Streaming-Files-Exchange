@@ -1,5 +1,6 @@
 from typing import Dict, List
 from threading import Event
+from queue import Queue
 
 STOP_Q_MSG = "STOP"
 
@@ -24,9 +25,9 @@ class ServerSendModule:
 
     def thread_queue_handler(self, receiver_id, file_name):
         self.clients_queue[f'{self.client_id}'][3] = self.clients_queue[f'{receiver_id}'][3]
-        q = self.clients_queue[f'{receiver_id}'][3]
+        q: Queue = self.clients_queue[f'{receiver_id}'][3]
+        block: Event = self.clients_queue[f'{receiver_id}'][4]
         while True:
-            block: Event = self.clients_queue[f'{self.client_id}'][4]
             block.wait()
             self.clients_queue[f'{self.clients_queue}'][2] = True
             data = q.get()
