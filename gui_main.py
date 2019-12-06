@@ -36,6 +36,9 @@ class gui():
 
             self.window.quit()
 
+    def send_file_tcp(self):
+        print("Sending file")
+
     def __init__(self):
         self.my_ID = '           user_1          '
 
@@ -43,7 +46,9 @@ class gui():
 
         self.window = Tk()
         self.window.title('Kugburkalimetr')
-        self.window.geometry('600x400+700+500')
+        self.window.geometry('610x400+700+500')
+        self.window.minsize(610, 400)
+        self.window.maxsize(610, 400)
         self.downloaded_file_path = 'dupa'
 
         self.window.protocol("WM_DELETE_WINDOW", self.close_window)
@@ -91,6 +96,9 @@ class gui():
         self.bar['maximum'] = 100
         self.bar.grid(column=1, row=9)
 
+        self.send_file = Button(self.window, text="Send File", command=self.send_file_tcp, height=1, width=7)
+        self.send_file.grid(column=1, row=10)
+
         self.bar.start()
         for i in range(101):
 
@@ -101,7 +109,7 @@ class gui():
             self.progress_bar_text.grid(column=1, row=8)
 
             self.bar.update()
-            if (self.bar["value"] == 100):
+            if self.bar["value"] == 100:
                 self.if_downloaded()
             self.bar.stop()
             self.progress_bar_text.config(text="Progress : 0% ")
