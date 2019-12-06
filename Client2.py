@@ -97,6 +97,5 @@ if __name__ == "__main__":
     client_module = Client("127.0.0.1", 6969)
     client_module.initiate_connection()
     time.sleep(3)
-    client_module.send_file("README.md", 107014)
-    time.sleep(10)
+    time.sleep(30)
     client_module.close_connection()
