@@ -23,7 +23,6 @@ class ServerReceiverModule:
             # Check if cli_2 is busy
             if self.clients_dict[f'{cli_2_id}'][1]:
                 this_cli_q.put('BUSY')
-                # ??
                 continue
             else:
                 self.clients_dict[f'{cli_2_id}'][1] = True
