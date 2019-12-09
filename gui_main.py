@@ -111,19 +111,21 @@ class gui():
         self.send_file.grid(column=1, row=10)
 
         self.bar.start()
-        for i in range(101):
+        # for i in range(101):
 
-            time.sleep(0.05)
-            self.bar["value"] = i
+        i = 10
 
-            self.progress_bar_text = Label(self.window, text="Progress : " + str(i) + "%", font=("Arial Bold", 20))
-            self.progress_bar_text.grid(column=1, row=8)
+        time.sleep(0.05)
+        self.bar["value"] = i
 
-            self.bar.update()
-            if self.bar["value"] == 100:
-                self.if_downloaded()
-            self.bar.stop()
-            self.progress_bar_text.config(text="Progress : 0% ")
+        self.progress_bar_text = Label(self.window, text="Progress : " + str(i) + "%", font=("Arial Bold", 20))
+        self.progress_bar_text.grid(column=1, row=8)
+
+        self.bar.update()
+        if self.bar["value"] == 100:
+            self.if_downloaded()
+        self.bar.stop()
+        self.progress_bar_text.config(text="Progress : 0% ")
 
         self.bar["value"] = 0
 
