@@ -20,6 +20,11 @@ class ServerReceiverModule:
 
         while True:
             data = self.client_socket.recv(buffer_size).decode('utf-8')
+
+            if data == 'CON_CLOSE':
+                this_cli_q.put('CON_CLOSE')
+                break
+
             cli_2_id = data
 
             cli_2_id = int(cli_2_id)

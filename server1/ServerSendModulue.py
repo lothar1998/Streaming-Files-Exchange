@@ -12,6 +12,8 @@ class ServerSendModule:
     def _send_to_client(self):
         while True:
             data = self.clients_dict[self.client_id][2].get()
+            if data == 'CON_CLOSE':
+                break
             self.client_socket.send(data.encode())
 
     def execute(self):

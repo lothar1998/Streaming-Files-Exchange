@@ -21,6 +21,8 @@ class gui():
                             "The file has been downloaded! \nThe file path:" + str(self.downloaded_file_path))
 
     def adding_server_ip(self):
+        if self.server_IP is not None:
+            self.client_module.close_connection()
         messagebox.showinfo("Server IP", "The server has been connected!")
         self.server_IP = self.server_address_input.get()
         self.client_module = client(self.server_IP, 6969)
@@ -50,6 +52,8 @@ class gui():
     def __init__(self):
         self.client_module = None
         self.my_ID = None
+
+        self.server_IP = None
 
         self.window = Tk()
         self.window.title('Kugburkalimetr')

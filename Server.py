@@ -21,15 +21,21 @@ logger.addHandler(handler)
 
 
 def receiver_module_execute(client_socket, client_address, client_id, server):
+    logger.info("reveiver: " + threading.current_thread().getName())
+
     srm = ServerReceiverModule(client_id, server.client_dictionary, client_socket)
     srm.receive_data()
     logger.info("closing receiver module for client: %s", client_id)
+    server.client_dictionary[client_id][0].shutdown(False)
 
 
 def sender_module_execute(client_socket, client_address, client_id, server):
+    logger.info("sender: " + threading.current_thread().getName())
+
     ssm = ServerSendModule(client_id, server.client_dictionary, client_socket)
     ssm.execute()
     logger.info("closing sender module for client: %s", client_id)
+    server.client_dictionary[client_id][0].shutdown(False)
 
 
 class Server:

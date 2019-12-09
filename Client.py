@@ -9,9 +9,12 @@ def file_name_parser(file_name):
 def sender_thread(client):
     while True:
         client.condition_send.wait()
-
+        pass
         if client.is_finished:
-            client.client_socket.send(b"CON_CLOSE")
+            con_close = "CON_CLOSE"
+            client.client_socket.send(con_close.encode())
+            client.client_socket.shutdown(socket.SHUT_RDWR)
+            client.client_socket.close()
             break
 
         to_send = str(client.client_receiver_id)
@@ -94,14 +97,11 @@ class Client:
         self.condition_send.set()
         self.condition_recv.set()
         self.thread_pool.shutdown(False)
-        self.client_socket.shutdown(socket.SHUT_RDWR)
-        self.client_socket.close()
 
 
 if __name__ == "__main__":
     client_module = Client("127.0.0.1", 6969)
     client_module.initiate_connection()
     time.sleep(3)
-    client_module.send_file("README.md", 90541)
-    time.sleep(30)
+    # client_module.send_file("README.md", 90541)
     client_module.close_connection()
