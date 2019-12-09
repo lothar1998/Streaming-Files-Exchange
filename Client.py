@@ -8,6 +8,7 @@ def sender_thread(client):
         client.condition_send.wait()
 
         if client.is_finished:
+            client.client_socket.send(b"CON_CLOSE")
             break
 
         to_send = str(client.client_receiver_id)
@@ -24,6 +25,8 @@ def sender_thread(client):
             while line:
                 client.client_socket.send(line.encode())
                 line = file.readline()
+
+            file.close()
 
         client.condition_send.clear()
 
@@ -93,6 +96,6 @@ if __name__ == "__main__":
     client_module = Client("127.0.0.1", 6969)
     client_module.initiate_connection()
     time.sleep(3)
-    client_module.send_file("README.md", 3455)
-    time.sleep(100)
+    client_module.send_file("README.md", 85472)
+    time.sleep(30)
     client_module.close_connection()

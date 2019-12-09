@@ -26,6 +26,8 @@ def sender_thread(client):
                 client.client_socket.send(line.encode())
                 line = file.readline()
 
+            file.close()
+
         client.condition_send.clear()
 
 
@@ -94,5 +96,5 @@ if __name__ == "__main__":
     client_module = Client("127.0.0.1", 6969)
     client_module.initiate_connection()
     time.sleep(3)
-    time.sleep(100)
+    time.sleep(30)
     client_module.close_connection()
