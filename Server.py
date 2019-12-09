@@ -57,7 +57,7 @@ class Server:
             (client_socket, client_address) = main_socket.accept()
             logger.info("connection accepted from: %s , port: %s", client_address[0], client_address[1])
             client_id = self.random_client_id()
-            print(client_id)
+            client_socket.send(str(client_id).encode())
             logger.info("assigned client_id: %s", client_id)
             self.client_dictionary[client_id] = [concurrent.futures.ThreadPoolExecutor(2), False, queue.Queue()]
             client_executor = self.client_dictionary.get(client_id)[0]

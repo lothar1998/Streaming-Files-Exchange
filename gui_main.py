@@ -3,6 +3,7 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox
 from tkinter.ttk import Progressbar
+from Client import Client as client
 
 
 class gui():
@@ -20,12 +21,14 @@ class gui():
                             "The file has been downloaded! \nThe file path:" + str(self.downloaded_file_path))
 
     def adding_server_ip(self):
-        messagebox.showinfo("Server IP", "The addres has been added")
+        messagebox.showinfo("Server IP", "The server has been connected!")
         self.server_IP = self.server_address_input.get()
-        print(self.server_IP)
+        self.client_module = client(self.server_IP, 6969)
+        self.client_module.initiate_connection()
         self.get_my_id()
 
     def get_my_id(self):
+        self.my_ID = self.client_module.client_id
         self.my_id_label = Label(self.window, text=self.my_ID, font=("Arial Bold", 20), borderwidth=2, relief="sunken")
         self.my_id_label.grid(column=1, row=4)
 
@@ -33,19 +36,20 @@ class gui():
         if messagebox.askokcancel("Quit", "Do you really want to quit?"):
             self.window.destroy()
             print("Window closed")
-
+            if self.client_module is not None:
+                self.client_module.close_connection()
             self.window.quit()
 
-    def send_file_tcp(self):
-        print("Sending file")
-
     def add_destination_id(self):
-        destination_id = self.txt_destinaiton.get()
-        print(destination_id)
+        return self.txt_destinaiton.get()  # on add button processed
 
+    def send_file_tcp(self):
+        destination_id = self.add_destination_id()
+        self.client_module.send_file(self.file_path, destination_id)
 
     def __init__(self):
-        self.my_ID = 'gozdecki'
+        self.client_module = None
+        self.my_ID = None
 
         self.window = Tk()
         self.window.title('Kugburkalimetr')
@@ -87,9 +91,9 @@ class gui():
         self.txt_destinaiton = Entry(self.window, width=17, justify=CENTER, bd=5, font=("Arial Bold", 18))
         self.txt_destinaiton.grid(column=1, row=7)
 
-        self.destination_button = Button(self.window, text="Add", command=self.add_destination_id, height=2, width=5,
-                                        padx=10)
-        self.destination_button.grid(column=3, row=7)
+        # self.destination_button = Button(self.window, text="Add", command=self.add_destination_id, height=2, width=5,
+        #                                 padx=10)
+        # self.destination_button.grid(column=3, row=7)
 
         self.empty_lbl_3 = Label(self.window, text="", font=("Arial Bold", 20))
         self.empty_lbl_3.grid(column=0, row=7)

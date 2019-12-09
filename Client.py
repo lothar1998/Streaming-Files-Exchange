@@ -69,11 +69,13 @@ class Client:
         self.is_ready_to_receive = False
         self.client_receiver_id = None
         self.is_receiver_client_busy = False
+        self.client_id = None
 
     def initiate_connection(self):
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_SCTP)
         self.client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.client_socket.connect((self.ip_address, self.port))
+        self.client_id = self.client_socket.recv(16).decode()
         self.thread_pool = concurrent.futures.ThreadPoolExecutor(2, thread_name_prefix="Client module")
         self.thread_pool.submit(sender_thread, self)
         self.thread_pool.submit(receiver_thread, self)
