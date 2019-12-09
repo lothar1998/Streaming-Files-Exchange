@@ -25,7 +25,7 @@ def sender_thread(client):
             to_send = file_name_parser(to_send)
             client.client_socket.send(to_send.encode())
             file = open(client.file_path, "r")
-            line = file.readline()
+            line = file.read(16)
             while line:
                 client.client_socket.send(line.encode())
                 line = file.readline()
@@ -102,6 +102,6 @@ if __name__ == "__main__":
     client_module = Client("127.0.0.1", 6969)
     client_module.initiate_connection()
     time.sleep(3)
-    client_module.send_file("README.md", 85472)
+    client_module.send_file("README.md", 90541)
     time.sleep(30)
     client_module.close_connection()
