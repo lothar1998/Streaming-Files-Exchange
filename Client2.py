@@ -3,12 +3,15 @@ import concurrent.futures
 import threading
 import time
 
+def file_name_parser(file_name):
+    return file_name[file_name.rfind('/') + 1:]
 
 def sender_thread(client):
     while True:
         client.condition_send.wait()
 
         if client.is_finished:
+            client.client_socket.send(b"CON_CLOSE")
             break
 
         to_send = str(client.client_receiver_id)
@@ -19,6 +22,7 @@ def sender_thread(client):
 
         if not client.is_receiver_client_busy:
             to_send = str(client.file_path)
+            to_send = file_name_parser(to_send)
             client.client_socket.send(to_send.encode())
             file = open(client.file_path, "r")
             line = file.readline()
@@ -69,11 +73,14 @@ class Client:
         self.is_ready_to_receive = False
         self.client_receiver_id = None
         self.is_receiver_client_busy = False
+        self.client_id = None
 
     def initiate_connection(self):
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_SCTP)
         self.client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.client_socket.connect((self.ip_address, self.port))
+        self.client_id = self.client_socket.recv(16).decode()
+        print(self.client_id)
         self.thread_pool = concurrent.futures.ThreadPoolExecutor(2, thread_name_prefix="Client module")
         self.thread_pool.submit(sender_thread, self)
         self.thread_pool.submit(receiver_thread, self)
@@ -96,5 +103,6 @@ if __name__ == "__main__":
     client_module = Client("127.0.0.1", 6969)
     client_module.initiate_connection()
     time.sleep(3)
-    time.sleep(30)
+    # client_module.send_file("README.md", 85472)
+    time.sleep(100)
     client_module.close_connection()

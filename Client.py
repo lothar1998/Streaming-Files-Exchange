@@ -3,6 +3,9 @@ import concurrent.futures
 import threading
 import time
 
+def file_name_parser(file_name):
+    return file_name[file_name.rfind('/') + 1:]
+
 def sender_thread(client):
     while True:
         client.condition_send.wait()
@@ -19,6 +22,7 @@ def sender_thread(client):
 
         if not client.is_receiver_client_busy:
             to_send = str(client.file_path)
+            to_send = file_name_parser(to_send)
             client.client_socket.send(to_send.encode())
             file = open(client.file_path, "r")
             line = file.readline()
