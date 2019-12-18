@@ -70,6 +70,7 @@ class gui():
         self.server_address_label = Label(self.window, text="Server IP4 address ", font=("Arial Bold", 20))
         self.server_address_label.grid(column=0, row=2)
 
+        # TODO: set field from multicast
         self.server_address_input = Entry(self.window, width=17, text="plant", justify=CENTER, bd=5,
                                           font=("Arial Bold", 18))
         self.server_address_input.grid(column=1, row=2)

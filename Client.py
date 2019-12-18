@@ -2,9 +2,12 @@ import socket
 import concurrent.futures
 import threading
 import time
+import struct
+
 
 def file_name_parser(file_name):
     return file_name[file_name.rfind('/') + 1:]
+
 
 def sender_thread(client):
     while True:
@@ -63,6 +66,37 @@ def receiver_thread(client):
             file.close()
 
 
+def multicast_search():
+    test_msg = b"Hello Multicast"
+    multicast_group = ('224.1.1.1', 6969)
+
+    multicast_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+    # if no response from server - timeout
+    multicast_sock.settimeout(1)
+    # ttl setting for messages to not go past local network
+    # packet into single byte by struct
+    ttl = struct.pack('b', 1)
+    multicast_sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
+
+    try:
+        multicast_sock.sendto(test_msg, multicast_group)
+        while True:
+            try:
+                data, server = multicast_sock.recvfrom(16)
+            except socket.timeout:
+                print('timed out, no more responses')
+                break
+            else:
+                print(f'received server ip {data} from {server}')
+                # return server     # returns complete server info (server_ip, port)
+                return data         # returns data sent from server -- here localhost ip
+
+    finally:
+        print('closing socket')
+        multicast_sock.close()
+
+
 class Client:
     def __init__(self, ip_address, port):
         self.ip_address = ip_address
@@ -79,7 +113,7 @@ class Client:
         self.client_id = None
 
     def initiate_connection(self):
-        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_SCTP)
+        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
         self.client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.client_socket.connect((self.ip_address, self.port))
         self.client_id = self.client_socket.recv(16).decode()
@@ -100,7 +134,9 @@ class Client:
 
 
 if __name__ == "__main__":
-    client_module = Client("127.0.0.1", 6969)
+    server_info = multicast_search()
+
+    client_module = Client(server_info, 6969)
     client_module.initiate_connection()
     time.sleep(3)
     # client_module.send_file("README.md", 90541)
