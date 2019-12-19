@@ -4,6 +4,9 @@ from tkinter import filedialog
 from tkinter import messagebox
 from tkinter.ttk import Progressbar
 from Client import Client as client
+import math
+import os
+
 
 
 class gui():
@@ -16,16 +19,20 @@ class gui():
         self.empty_lbl_5 = Label(self.window, text=self.file_path, font=("Arial Bold", 10))
         self.empty_lbl_5.grid(column=1, row=10)
 
-    def if_downloaded(self):
+    def if_downloaded(self, file_name):
         messagebox.showinfo("Download Info",
-                            "The file has been downloaded! \nThe file path:" + str(self.downloaded_file_path))
+                            "The file has been downloaded! \nPath: " + str(os.getcwd() + "/" + file_name))
+
+    def if_start_downloading(self, file_name):
+        messagebox.showinfo("Download Info",
+                            "File: " + file_name + " is currently downloading")
 
     def adding_server_ip(self):
         if self.server_IP is not None:
             self.client_module.close_connection()
         messagebox.showinfo("Server IP", "The server has been connected!")
         self.server_IP = self.server_address_input.get()
-        self.client_module = client(self.server_IP, 6969)
+        self.client_module = client(self.server_IP, 6969, self.if_downloaded, self.if_start_downloading)
         self.client_module.initiate_connection()
         self.get_my_id()
 
@@ -48,6 +55,16 @@ class gui():
     def send_file_tcp(self):
         destination_id = self.add_destination_id()
         self.client_module.send_file(self.file_path, destination_id)
+        current_progress = 0
+        while True:
+            current_progress = math.floor(self.client_module.current_progress * 100)
+            time.sleep(0.05)
+            self.progress_bar_text.config(text="Progress : " + str(current_progress) + " %")
+            self.bar["value"] = current_progress
+            self.bar.update()
+
+            if current_progress == 100:
+                break
 
     def __init__(self):
         self.client_module = None
@@ -117,21 +134,18 @@ class gui():
         self.bar.start()
         # for i in range(101):
 
-        i = 10
+        i = 0
 
-        time.sleep(0.05)
         self.bar["value"] = i
 
         self.progress_bar_text = Label(self.window, text="Progress : " + str(i) + "%", font=("Arial Bold", 20))
         self.progress_bar_text.grid(column=1, row=8)
 
-        self.bar.update()
+
         if self.bar["value"] == 100:
             self.if_downloaded()
         self.bar.stop()
-        self.progress_bar_text.config(text="Progress : 0% ")
 
-        self.bar["value"] = 0
 
         self.window.mainloop()
 

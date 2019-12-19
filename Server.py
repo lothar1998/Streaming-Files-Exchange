@@ -3,8 +3,8 @@ import concurrent.futures
 import socket
 import random
 import threading
-from server1.ServerReceiverModule import ServerReceiverModule
-from server1.ServerSendModulue import ServerSendModule
+from ServerReceiverModule import ServerReceiverModule
+from ServerSendModule import ServerSendModule
 import queue
 import time
 
@@ -33,7 +33,7 @@ def sender_module_execute(client_socket, client_address, client_id, server):
     logger.info("sender: " + threading.current_thread().getName())
 
     ssm = ServerSendModule(client_id, server.client_dictionary, client_socket)
-    ssm.execute()
+    ssm.send_data()
     logger.info("closing sender module for client: %s", client_id)
     server.client_dictionary[client_id][0].shutdown(False)
 
@@ -42,8 +42,8 @@ class Server:
     def __init__(self, server_port):
         self.server_port = server_port
         self.client_dictionary = dict()
-        self.condition_send = threading.Event()
-        self.condition_recv = threading.Event()
+        # self.condition_send = threading.Event()
+        # self.condition_recv = threading.Event()
 
     def random_client_id(self):
         while True:
@@ -63,7 +63,7 @@ class Server:
             (client_socket, client_address) = main_socket.accept()
             logger.info("connection accepted from: %s , port: %s", client_address[0], client_address[1])
             client_id = self.random_client_id()
-            client_socket.send(str(client_id).encode())
+            client_socket.send(str(client_id).encode('utf-8'))
             logger.info("assigned client_id: %s", client_id)
             self.client_dictionary[client_id] = [concurrent.futures.ThreadPoolExecutor(2), False, queue.Queue()]
             client_executor = self.client_dictionary.get(client_id)[0]
