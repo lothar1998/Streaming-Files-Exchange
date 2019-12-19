@@ -7,6 +7,8 @@ from server1.ServerReceiverModule import ServerReceiverModule
 from server1.ServerSendModulue import ServerSendModule
 import queue
 import struct
+import daemon
+import os
 
 MAX_CLIENT_LISTEN = 10
 MAX_CLIENT_LOGGED = 256000
@@ -19,6 +21,11 @@ handler.setLevel(logging.INFO)
 handler_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
 handler.setFormatter(handler_format)
 logger.addHandler(handler)
+
+
+def create_daemon():
+    server_module = Server(6969)
+    server_module.start()
 
 
 def receiver_module_execute(client_socket, client_address, client_id, server):
@@ -73,7 +80,7 @@ class Server:
 
     def start(self):
         logger.info("Server main thread has been started")
-        main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
+        main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_SCTP)
         main_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         main_socket.bind(("127.0.0.1", self.server_port))
 
@@ -97,5 +104,22 @@ class Server:
 
 
 if __name__ == "__main__":
-    server_module = Server(6969)
-    server_module.start()
+    uid = os.getuid()
+    if uid == 0:
+        # means that is root, so change it to 'normal user'
+        uid = 501
+
+    gid = os.getgid()
+    if gid == 0:
+        # same for group
+        gid = 20
+
+    """
+    DaemonContext:
+        - detached=True,
+        - working_directory='/'
+        - umask=0
+        - files_preserve=None # closes all opened descriptors
+    """
+    with daemon.DaemonContext(uid=uid, gid=gid):
+        create_daemon()

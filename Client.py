@@ -113,7 +113,7 @@ class Client:
         self.client_id = None
 
     def initiate_connection(self):
-        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
+        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_SCTP)
         self.client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.client_socket.connect((self.ip_address, self.port))
         self.client_id = self.client_socket.recv(16).decode()
