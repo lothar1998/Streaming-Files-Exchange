@@ -64,6 +64,10 @@ def receiver_thread(client):
                 elif content_of_message(decoded_data) == "not_busy":
                     client.is_receiver_client_busy = False
                     client.condition_busy.set()
+                elif content_of_message(decoded_data) == "wrong_key":
+                    client.is_receiver_client_busy = True
+                    client.condition_busy.set()
+                    client.wrong_key_trigger()
 
             elif type_of_message(decoded_data) == "size":  # required for receiving file
                 client.size_of_file = int(content_of_message(decoded_data))
@@ -85,10 +89,11 @@ def receiver_thread(client):
 
 
 class Client:
-    def __init__(self, ip_address, port, download_trigger, downloading_trigger):
+    def __init__(self, ip_address, port, download_trigger, downloading_trigger, wrong_key_trigger):
         self.ip_address = ip_address
         self.download_trigger = download_trigger
         self.downloading_trigger = downloading_trigger
+        self.wrong_key_trigger = wrong_key_trigger
         self.port = port
         self.client_socket = None
         self.thread_pool = None

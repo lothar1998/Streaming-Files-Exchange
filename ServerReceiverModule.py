@@ -30,25 +30,31 @@ class ServerReceiverModule:
             try:
                 decoded_data = received_data.decode()
                 if type_of_message(decoded_data) == "ask":  # required for sending file
-                    receiver_client_id = int(content_of_message(decoded_data))
-                    if self.clients_dict[receiver_client_id][1] == True:
-                        self.clients_dict[self.client_id][2].put("info:busy".encode())
+                    if len(content_of_message(decoded_data)) != 0:
+                        receiver_client_id = int(content_of_message(decoded_data))
+                        if receiver_client_id in self.clients_dict.keys():
+                            if self.clients_dict[receiver_client_id][1] == True:
+                                self.clients_dict[self.client_id][2].put("info:busy".encode())
+                            else:
+                                self.clients_dict[receiver_client_id][1] = True  # set as busy user
+                                self.clients_dict[self.client_id][2].put("info:not_busy".encode())
+                                received_data = self.client_socket.recv(BUFFER_SIZE)
+                                self.clients_dict[receiver_client_id][2].put(received_data)
+                                size = int(content_of_message(received_data.decode()))
+                                current_size = 0
+                                received_data = self.client_socket.recv(BUFFER_SIZE)
+                                self.clients_dict[receiver_client_id][2].put(received_data)
+
+                                while current_size != size:
+                                    received_data = self.client_socket.recv(BUFFER_SIZE)
+                                    self.clients_dict[receiver_client_id][2].put(received_data)
+                                    current_size += len(received_data)
+
+                                self.clients_dict[receiver_client_id][2].put("info:end_busy".encode())
+                        else:
+                            self.clients_dict[self.client_id][2].put("info:wrong_key".encode())
                     else:
-                        self.clients_dict[receiver_client_id][1] = True  # set as busy user
-                        self.clients_dict[self.client_id][2].put("info:not_busy".encode())
-                        received_data = self.client_socket.recv(BUFFER_SIZE)
-                        self.clients_dict[receiver_client_id][2].put(received_data)
-                        size = int(content_of_message(received_data.decode()))
-                        current_size = 0
-                        received_data = self.client_socket.recv(BUFFER_SIZE)
-                        self.clients_dict[receiver_client_id][2].put(received_data)
-
-                        while current_size != size:
-                            received_data = self.client_socket.recv(BUFFER_SIZE)
-                            self.clients_dict[receiver_client_id][2].put(received_data)
-                            current_size += len(received_data)
-
-                        self.clients_dict[receiver_client_id][2].put("info:end_busy".encode())
+                        self.clients_dict[self.client_id][2].put("info:wrong_key".encode())
 
                 elif type_of_message(decoded_data) == "end":
                     self.clients_dict[self.client_id][2].put(decoded_data.encode())

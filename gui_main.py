@@ -6,6 +6,7 @@ from tkinter.ttk import Progressbar
 from Client import Client as client
 import math
 import os
+import socket
 
 
 
@@ -27,14 +28,26 @@ class gui():
         messagebox.showinfo("Download Info",
                             "File: " + file_name + " is currently downloading")
 
+    def if_wrong_key(self):
+        messagebox.showinfo("Send Info",
+                            "Your destination key does not exist!")
+
     def adding_server_ip(self):
-        if self.server_IP is not None:
-            self.client_module.close_connection()
-        messagebox.showinfo("Server IP", "The server has been connected!")
+        if not self.socket_error:
+            if self.server_IP is not None:
+                self.client_module.close_connection()
+
         self.server_IP = self.server_address_input.get()
-        self.client_module = client(self.server_IP, 6969, self.if_downloaded, self.if_start_downloading)
-        self.client_module.initiate_connection()
-        self.get_my_id()
+        self.client_module = client(self.server_IP, 6969, self.if_downloaded, self.if_start_downloading, self.if_wrong_key)
+        try:
+            self.client_module.initiate_connection()
+            self.get_my_id()
+            messagebox.showinfo("Server IP", "The server has been connected!")
+            self.socket_error = False
+        except socket.error:
+            messagebox.showinfo("Server IP", "Connection refused!")
+            self.socket_error = True
+
 
     def get_my_id(self):
         self.my_ID = self.client_module.client_id
@@ -45,8 +58,9 @@ class gui():
         if messagebox.askokcancel("Quit", "Do you really want to quit?"):
             self.window.destroy()
             print("Window closed")
-            if self.client_module is not None:
-                self.client_module.close_connection()
+            if not self.socket_error:
+                if self.server_IP is not None:
+                    self.client_module.close_connection()
             self.window.quit()
 
     def add_destination_id(self):
@@ -67,6 +81,7 @@ class gui():
                 break
 
     def __init__(self):
+        self.socket_error = False
         self.client_module = None
         self.my_ID = None
 
