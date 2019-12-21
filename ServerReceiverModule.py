@@ -48,6 +48,12 @@ class ServerReceiverModule:
                                 while current_size != size:
                                     received_data = self.client_socket.recv(BUFFER_SIZE)
                                     self.clients_dict[receiver_client_id][2].put(received_data)
+                                    try:
+                                        decoded_data = received_data.decode()
+                                        if type_of_message(decoded_data) == "info" and content_of_message(decoded_data) == "interrupted":
+                                            break
+                                    except (UnicodeDecodeError, AttributeError):
+                                        pass
                                     current_size += len(received_data)
 
                                 self.clients_dict[receiver_client_id][2].put("info:end_busy".encode())

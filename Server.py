@@ -42,8 +42,6 @@ class Server:
     def __init__(self, server_port):
         self.server_port = server_port
         self.client_dictionary = dict()
-        # self.condition_send = threading.Event()
-        # self.condition_recv = threading.Event()
 
     def random_client_id(self):
         while True:

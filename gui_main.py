@@ -21,13 +21,16 @@ class gui():
         self.empty_lbl_5.grid(column=1, row=10)
 
     def if_downloaded(self, file_name):
-        self.ip_button_connect.config(state=NORMAL)
+        self.ip_button_connect.config(state=DISABLED)
         self.browser_button_file.config(state=NORMAL)
         self.send_file.config(state=NORMAL)
-        self.stop_sending.config(state=NORMAL)
+        self.stop_sending.config(state=DISABLED)
         self.txt_destinaiton.config(state=NORMAL)
-        messagebox.showinfo("Download Info",
-                            "The file has been downloaded! \nPath: " + str(os.getcwd() + "/" + file_name))
+        if self.client_module.recv_interrupted:
+            messagebox.showinfo("Download Info", "Downloading file: " + file_name + " was stopped!")
+        else:
+            messagebox.showinfo("Download Info", "The file has been downloaded! \nPath: " + str(os.getcwd() + "/" +
+                                                                                                file_name))
 
     def if_start_downloading(self, file_name):
         self.ip_button_connect.config(state=DISABLED)
@@ -35,10 +38,14 @@ class gui():
         self.send_file.config(state=DISABLED)
         self.stop_sending.config(state=DISABLED)
         self.txt_destinaiton.config(state=DISABLED)
-        messagebox.showinfo("Download Info",
-                            "File: " + file_name + " is currently downloading")
+        messagebox.showinfo("Download Info", "File: " + file_name + " is currently downloading")
 
     def if_wrong_key(self):
+        self.ip_button_connect.config(state=DISABLED)
+        self.browser_button_file.config(state=NORMAL)
+        self.send_file.config(state=NORMAL)
+        self.stop_sending.config(state=DISABLED)
+        self.txt_destinaiton.config(state=NORMAL)
         messagebox.showinfo("Send Info",
                             "Your destination key does not exist!")
 
@@ -81,10 +88,15 @@ class gui():
         return self.txt_destinaiton.get()  # on add button processed
 
     def stop_sending(self):
-        # TODO stop sending data
+        self.client_module.sending_interrupted = True
+        self.progress_bar_text.config(text="Progress : " + str(0) + " %")  # TODO does not work updating progress bar
+        self.bar["value"] = 0  # TODO does not work updating progress bar
+        self.bar.update()  # TODO does not work updating progress bar
         self.ip_button_connect.config(state=NORMAL)
         self.browser_button_file.config(state=NORMAL)
         self.send_file.config(state=NORMAL)
+        self.stop_sending.config(state=DISABLED)
+
 
     def send_file_tcp(self):
         destination_id = self.add_destination_id()

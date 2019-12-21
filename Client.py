@@ -41,6 +41,10 @@ def sender_thread(client):
                 current_size = 0
                 with open(file_path, "rb") as file:
                     for line in file:
+                        if client.sending_interrupted:
+                            client.client_socket.send("info:interrupted".encode('utf-8'))
+                            client.sending_interrupted = False
+                            break
                         client.client_socket.send(line)
                         current_size += len(line)
                         client.current_progress = (current_size / size)
@@ -79,11 +83,23 @@ def receiver_thread(client):
                 client.downloading_trigger(client.name_of_file)
                 while current_file_size != client.size_of_file:
                     received_data = client.client_socket.recv(BUFFER_SIZE)
+                    try:
+                        decoded_data = received_data.decode()
+                        if type_of_message(decoded_data) == "info" and content_of_message(decoded_data) == "interrupted":
+                            client.recv_interrupted = True
+                            break
+                    except (UnicodeDecodeError, AttributeError):
+                        pass
+
                     client.file_descriptor.write(received_data)
                     current_file_size += len(received_data)
 
                 client.file_descriptor.close()
+                if client.recv_interrupted:
+                    os.remove(client.name_of_file)
                 client.download_trigger(client.name_of_file)
+                if client.recv_interrupted:
+                    client.recv_interrupted = False
         except (UnicodeDecodeError, AttributeError):
             pass
 
@@ -110,6 +126,8 @@ class Client:
         self.file_descriptor = None
         self.current_progress = 0
         self.download_current_progress = 0
+        self.sending_interrupted = False
+        self.recv_interrupted = False
 
     def initiate_connection(self):
         self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_SCTP)
