@@ -28,7 +28,8 @@ def sender_thread(client):
             break
 
         if client.client_receiver_id is not None:  # passed client2 id
-            client.client_socket.send(str("ask:" + str(client.client_receiver_id)).encode('utf-8'))  # sending request for checking whether client2 is busy
+            # sending request for checking whether client2 is busy
+            client.client_socket.send(str("ask:" + str(client.client_receiver_id)).encode('utf-8'))
 
             client.condition_busy.clear()  # waiting for checking whether client2 is busy
             client.condition_busy.wait()
@@ -87,7 +88,8 @@ def receiver_thread(client):
                     received_data = client.client_socket.recv(BUFFER_SIZE)
                     try:
                         decoded_data = received_data.decode()
-                        if type_of_message(decoded_data) == "info" and content_of_message(decoded_data) == "interrupted":
+                        if type_of_message(decoded_data) == "info" and content_of_message(
+                                decoded_data) == "interrupted":
                             client.recv_interrupted = True
                             break
                     except (UnicodeDecodeError, AttributeError):
@@ -130,7 +132,7 @@ def multicast_search():
             else:
                 print(f'received server ip {data} from {server}')
                 # return server     # returns complete server info (server_ip, port)
-                return data         # returns data sent from server -- here localhost ip
+                return data  # returns data sent from server -- here localhost ip
 
     finally:
         print('closing socket')
@@ -184,13 +186,3 @@ class Client:
         self.client_socket.send("end:".encode('utf-8'))
         self.client_socket.shutdown(socket.SHUT_RDWR)
         self.thread_pool.shutdown(False)
-
-
-if __name__ == "__main__":
-    server_info = multicast_search()
-
-    client_module = Client(server_info, 6969)
-    client_module.initiate_connection()
-    time.sleep(3)
-    # client_module.send_file("README.md", 90541)
-    client_module.close_connection()
