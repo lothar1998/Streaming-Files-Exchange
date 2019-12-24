@@ -4,6 +4,10 @@ from tkinter import filedialog
 from tkinter import messagebox
 from tkinter.ttk import Progressbar
 from Client import Client as client
+import math
+import os
+import socket
+
 
 
 class gui():
@@ -16,21 +20,58 @@ class gui():
         self.empty_lbl_5 = Label(self.window, text=self.file_path, font=("Arial Bold", 10))
         self.empty_lbl_5.grid(column=1, row=10)
 
-    def if_downloaded(self):
-        messagebox.showinfo("Download Info",
-                            "The file has been downloaded! \nThe file path:" + str(self.downloaded_file_path))
+    def if_downloaded(self, file_name):
+        self.ip_button_connect.config(state=DISABLED)
+        self.browser_button_file.config(state=NORMAL)
+        self.send_file.config(state=NORMAL)
+        self.stop_sending.config(state=DISABLED)
+        self.txt_destinaiton.config(state=NORMAL)
+        if self.client_module.recv_interrupted:
+            messagebox.showinfo("Download Info", "Downloading file: " + file_name + " was stopped!")
+        else:
+            messagebox.showinfo("Download Info", "The file has been downloaded! \nPath: " + str(os.getcwd() + "/" +
+                                                                                                file_name))
+
+    def if_start_downloading(self, file_name):
+        self.ip_button_connect.config(state=DISABLED)
+        self.browser_button_file.config(state=DISABLED)
+        self.send_file.config(state=DISABLED)
+        self.stop_sending.config(state=DISABLED)
+        self.txt_destinaiton.config(state=DISABLED)
+        messagebox.showinfo("Download Info", "File: " + file_name + " is currently downloading")
+
+    def if_wrong_key(self):
+        self.ip_button_connect.config(state=DISABLED)
+        self.browser_button_file.config(state=NORMAL)
+        self.send_file.config(state=NORMAL)
+        self.stop_sending.config(state=DISABLED)
+        self.txt_destinaiton.config(state=NORMAL)
+        messagebox.showinfo("Send Info",
+                            "Your destination key does not exist!")
 
     def adding_server_ip(self):
-        if self.server_IP is not None:
-            self.client_module.close_connection()
-        messagebox.showinfo("Server IP", "The server has been connected!")
+        if not self.socket_error:
+            if self.server_IP is not None:
+                self.client_module.close_connection()
+
         self.server_IP = self.server_address_input.get()
-        self.client_module = client(self.server_IP, 6969)
-        self.client_module.initiate_connection()
-        self.get_my_id()
+        self.client_module = client(self.server_IP, 6969, self.if_downloaded, self.if_start_downloading, self.if_wrong_key)
+        try:
+            self.client_module.initiate_connection()
+            self.get_my_id()
+
+            messagebox.showinfo("Server IP", "The server has been connected!")
+            self.socket_error = False
+            self.ip_button_connect.config(state=DISABLED)
+            self.server_address_input.config(state=DISABLED)
+        except socket.error:
+            messagebox.showinfo("Server IP", "Connection refused!")
+            self.socket_error = True
+
 
     def get_my_id(self):
         self.my_ID = self.client_module.client_id
+
         self.my_id_label = Label(self.window, text=self.my_ID, font=("Arial Bold", 20), borderwidth=2, relief="sunken")
         self.my_id_label.grid(column=1, row=4)
 
@@ -38,18 +79,49 @@ class gui():
         if messagebox.askokcancel("Quit", "Do you really want to quit?"):
             self.window.destroy()
             print("Window closed")
-            if self.client_module is not None:
-                self.client_module.close_connection()
+            if not self.socket_error:
+                if self.server_IP is not None:
+                    self.client_module.close_connection()
             self.window.quit()
 
     def add_destination_id(self):
         return self.txt_destinaiton.get()  # on add button processed
 
+    def stop_sending(self):
+        self.client_module.sending_interrupted = True
+        self.progress_bar_text.config(text="Progress : " + str(0) + " %")  # TODO does not work updating progress bar
+        self.bar["value"] = 0  # TODO does not work updating progress bar
+        self.bar.update()  # TODO does not work updating progress bar
+        self.ip_button_connect.config(state=NORMAL)
+        self.browser_button_file.config(state=NORMAL)
+        self.send_file.config(state=NORMAL)
+        self.stop_sending.config(state=DISABLED)
+
+
     def send_file_tcp(self):
         destination_id = self.add_destination_id()
         self.client_module.send_file(self.file_path, destination_id)
+        self.ip_button_connect.config(state=DISABLED)
+        self.browser_button_file.config(state=DISABLED)
+        self.send_file.config(state=DISABLED)
+        self.stop_sending.config(state=NORMAL)
+        current_progress = 0
+        while True:
+            current_progress = math.floor(self.client_module.current_progress * 100)
+            time.sleep(0.05)
+            self.progress_bar_text.config(text="Progress : " + str(current_progress) + " %")
+            self.bar["value"] = current_progress
+            self.bar.update()
+
+            if current_progress == 100:
+                self.ip_button_connect.config(state=NORMAL)
+                self.browser_button_file.config(state=NORMAL)
+                self.send_file.config(state=NORMAL)
+                self.stop_sending.config(state=DISABLED)
+                break
 
     def __init__(self):
+        self.socket_error = False
         self.client_module = None
         self.my_ID = None
 
@@ -58,8 +130,8 @@ class gui():
         self.window = Tk()
         self.window.title('Kugburkalimetr')
         self.window.geometry('610x400+700+500')
-        self.window.minsize(610, 400)
-        self.window.maxsize(610, 400)
+        self.window.minsize(610, 450)
+        self.window.maxsize(610, 450)
         self.downloaded_file_path = 'dupa'
 
         self.window.protocol("WM_DELETE_WINDOW", self.close_window)
@@ -112,27 +184,30 @@ class gui():
         self.bar['maximum'] = 100
         self.bar.grid(column=1, row=9)
 
+        self.empty_lbl_5 = Label(self.window, text="", justify=CENTER, font=("Arial Bold", 20))
+        self.empty_lbl_5.grid(column=0, row=10)
+
         self.send_file = Button(self.window, text="Send File", command=self.send_file_tcp, height=1, width=7)
-        self.send_file.grid(column=1, row=10)
+        self.send_file.grid(column=1, row=11)
+
+        self.stop_sending = Button(self.window, state=DISABLED,text="Stop Sending", command=self.stop_sending, height=1, width=9)
+        self.stop_sending .grid(column=0, row=11)
 
         self.bar.start()
         # for i in range(101):
 
-        i = 10
+        i = 0
 
-        time.sleep(0.05)
         self.bar["value"] = i
 
         self.progress_bar_text = Label(self.window, text="Progress : " + str(i) + "%", font=("Arial Bold", 20))
         self.progress_bar_text.grid(column=1, row=8)
 
-        self.bar.update()
+
         if self.bar["value"] == 100:
             self.if_downloaded()
         self.bar.stop()
-        self.progress_bar_text.config(text="Progress : 0% ")
 
-        self.bar["value"] = 0
 
         self.window.mainloop()
 
