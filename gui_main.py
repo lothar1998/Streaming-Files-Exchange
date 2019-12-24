@@ -4,6 +4,7 @@ from tkinter import filedialog
 from tkinter import messagebox
 from tkinter.ttk import Progressbar
 from Client import Client as client
+from Client import multicast_search
 import math
 import os
 import socket
@@ -54,13 +55,19 @@ class gui():
             if self.server_IP is not None:
                 self.client_module.close_connection()
 
-        self.server_IP = self.server_address_input.get()
+        if self.server_address_input.get() == '':
+            self.server_IP = multicast_search().decode('utf-8')
+            self.server_address_input.delete(0, END)
+            self.server_address_input.insert(0, self.server_IP)
+        else:
+            self.server_IP = self.server_address_input.get()
+
         self.client_module = client(self.server_IP, 6969, self.if_downloaded, self.if_start_downloading, self.if_wrong_key)
         try:
             self.client_module.initiate_connection()
             self.get_my_id()
 
-            messagebox.showinfo("Server IP", "The server has been connected!")
+            messagebox.showinfo("Server IP", f"The server has been connected!")
             self.socket_error = False
             self.ip_button_connect.config(state=DISABLED)
             self.server_address_input.config(state=DISABLED)

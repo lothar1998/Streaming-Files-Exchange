@@ -127,15 +127,12 @@ def multicast_search():
             try:
                 data, server = multicast_sock.recvfrom(16)
             except socket.timeout:
-                print('timed out, no more responses')
                 break
             else:
-                print(f'received server ip {data} from {server}')
                 # return server     # returns complete server info (server_ip, port)
                 return data  # returns data sent from server -- here localhost ip
 
     finally:
-        print('closing socket')
         multicast_sock.close()
 
 
@@ -165,7 +162,7 @@ class Client:
         self.recv_interrupted = False
 
     def initiate_connection(self):
-        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_SCTP)
+        self.client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
         self.client_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.client_socket.connect((self.ip_address, self.port))
         self.client_id = self.client_socket.recv(BUFFER_SIZE).decode('utf-8')

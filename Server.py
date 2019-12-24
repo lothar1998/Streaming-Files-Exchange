@@ -47,9 +47,10 @@ def sender_module_execute(client_socket, client_address, client_id, server):
 
 
 def multicast_handler(server):
-    print("In multicast handler")
     multicast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     multicast_socket.bind(('', server.server_port))
+
+    logger.info(multicast_socket.getsockname()[0])
 
     group = socket.inet_aton(MULTICAST_GROUP)
     mreq = struct.pack('4sL', group, socket.INADDR_ANY)
@@ -60,7 +61,6 @@ def multicast_handler(server):
 
         # server_ip = server.server_ip
         server_ip = '127.0.0.1'
-        print("sending ip...")
         multicast_socket.sendto(bytes(server_ip, 'utf-8'), address)
     # TODO: shutdown thread
 
@@ -78,7 +78,8 @@ class Server:
 
     def start(self):
         logger.info("Server main thread has been started")
-        main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_SCTP)
+        # TODO: IPPROTO_SCTP
+        main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
         main_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         main_socket.bind(("127.0.0.1", self.server_port))
 
@@ -102,6 +103,7 @@ class Server:
 
 
 if __name__ == "__main__":
+    print("Running Server")
     uid = os.getuid()
     if uid == 0:
         # means that is root, so change it to 'normal user'
