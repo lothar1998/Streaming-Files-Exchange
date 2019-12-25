@@ -115,10 +115,10 @@ def multicast_search():
     multicast_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     # if no response from server - timeout
-    multicast_sock.settimeout(2)
+    multicast_sock.settimeout(1)
     # ttl setting for messages to not go past local network
     # packet into single byte by struct
-    ttl = struct.pack('b', 3)
+    ttl = struct.pack('b', 1)
     multicast_sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
 
     try:

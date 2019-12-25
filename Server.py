@@ -9,18 +9,106 @@ import queue
 import struct
 import daemon
 import os
+import sys
 
 MAX_CLIENT_LISTEN = 10
 MAX_CLIENT_LOGGED = 256000
 MULTICAST_GROUP = '224.1.1.1'
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
-handler = logging.FileHandler("log.log")
-handler.setLevel(logging.INFO)
-handler_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-handler.setFormatter(handler_format)
-logger.addHandler(handler)
+
+def get_logger_file(name, file_path, log_level=logging.INFO):
+    logger = logging.getLogger(name)
+    logger.setLevel(log_level)
+    handler = logging.FileHandler(file_path)
+    handler.setLevel(logging.INFO)
+    handler_format = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+    handler.setFormatter(handler_format)
+    logger.addHandler(handler)
+    return logger
+
+
+logger = get_logger_file("basic_logger", "/var/log/log.log")
+
+
+class LoggerWrapper:
+    def __init__(self, logger):
+        self.logger = logger
+
+    def write(self, str):
+        str = str.rstrip()  # get rid of all tailing newlines and white space
+        if str:  # don't log emtpy lines
+            for line in str.split('\n'):
+                self.logger.critical(line)  # critical to log at any logLevel
+
+    def flush(self):
+        for handler in self.logger.handlers:
+            handler.flush()
+
+    def close(self):
+        for handler in self.logger.handlers:
+            handler.close()
+
+
+def open_logger_files(loggers):
+    open_files = []
+    for logger in loggers:
+        for handler in logger.handlers:
+            if hasattr(handler, 'stream') and \
+                    hasattr(handler.stream, 'fileno'):
+                open_files.append(handler.stream)
+    return open_files
+
+
+class ServerDaemonContext(daemon.DaemonContext):
+    def __init__(self, chroot_directory=None, working_directory='/', umask=0, uid=None, gid=None, prevent_core=True,
+                 detach_process=None, files_preserve=[], loggers_preserve=[], pidfile=None, stdout_logger=None,
+                 stderr_logger=None, signal_map=None
+                 ):
+
+        self.stdout_logger = stdout_logger
+        self.stderr_logger = stderr_logger
+        self.loggers_preserve = loggers_preserve
+
+        if hasattr(os, "devnull"):
+            redirect = os.devnull
+        else:
+            redirect = "/dev/null"
+
+        devnull_in = open(redirect, 'r+')
+        devnull_out = open(redirect, 'w+')
+        files_preserve.extend([devnull_in, devnull_out])
+
+        daemon.DaemonContext.__init__(self,
+                                      chroot_directory=chroot_directory,
+                                      working_directory=working_directory,
+                                      umask=umask,
+                                      uid=uid,
+                                      gid=gid,
+                                      prevent_core=prevent_core,
+                                      detach_process=detach_process,
+                                      files_preserve=files_preserve,
+                                      pidfile=pidfile,
+                                      stdin=devnull_in,
+                                      stdout=devnull_out,
+                                      stderr=devnull_out,
+                                      signal_map=signal_map)
+
+    def _add_loggers(self):
+        for logger in [self.stdout_logger, self.stderr_logger]:
+            if logger:
+                self.loggers_preserve.append(logger)
+        logger_files = open_logger_files(self.loggers_preserve)
+        self.files_preserve.extend(logger_files)
+
+    def open(self):
+        self._add_loggers()
+        daemon.DaemonContext.open(self)
+        if self.stdout_logger:
+            logger_obj = LoggerWrapper(self.stdout_logger)
+            sys.stdout = logger_obj
+        if self.stderr_logger:
+            logger_obj = LoggerWrapper(self.stderr_logger)
+            sys.stderr = logger_obj
 
 
 def create_daemon():
@@ -112,6 +200,17 @@ class Server:
 
 if __name__ == "__main__":
     logger.info("Running server")
+    # testLogger = get_logger_file('test', '/var/log/test.log')
+    stdoutLogger = get_logger_file('stdout', '/var/log/stdout.log')
+    stderrLogger = get_logger_file('stderr', '/var/log/stderr.log')
+    testFile = open('test.file', 'w')
+
+    logger.info('testLogger: before opening context')
+    stdoutLogger.info('stdoutLogger: before opening context')
+    stderrLogger.info('stderrLogger: before opening context')
+    testFile.write('testFile: hello to a file before context\n')
+
+    # -- get and configure the DaemonContext
     uid = os.getuid()
     if uid == 0:
         # means that is root, so change it to 'normal user'
@@ -122,16 +221,32 @@ if __name__ == "__main__":
         # same for group
         gid = 20
 
-    if hasattr(os, "devnull"):
-        REDIRECT_TO = os.devnull
-    else:
-        REDIRECT_TO = "/dev/null"
-    """
-    DaemonContext:
-        - detached=True,
-        - working_directory='/'
-        - umask=0
-        - files_preserve=None # closes all opened descriptors
-    """
-    with daemon.DaemonContext(uid=uid, gid=gid):
-        create_daemon()
+    context = ServerDaemonContext(uid=uid, gid=gid)
+    context.files_preserve = [testFile]
+    context.loggers_preserve = [logger]
+    context.stdout_logger = stdoutLogger
+    context.stderr_logger = stderrLogger
+
+    with context:
+        server_module = Server(6969)
+        server_module.start()
+        raise (Exception("stderrLogger: bummer!"))
+
+
+
+    #
+    # """
+    # DaemonContext:
+    #     - detached=True,
+    #     - working_directory='/'
+    #     - umask=0
+    #     - files_preserve=None # closes all opened descriptors
+    # """
+    # context = daemon.DaemonContext(uid=uid, gid=gid, stdin=REDIRECT_TO, stdout=REDIRECT_TO, stderr=REDIRECT_TO)
+    #
+    # devnull_in = open(os.devnull, 'r+')
+    # devnull_out = open(os.devnull, 'w+')
+    # context.files_preserve([devnull_in, devnull_out])
+    #
+    # with context:
+    #     create_daemon()
