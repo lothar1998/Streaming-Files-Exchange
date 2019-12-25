@@ -115,10 +115,10 @@ def multicast_search():
     multicast_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     # if no response from server - timeout
-    multicast_sock.settimeout(1)
+    multicast_sock.settimeout(2)
     # ttl setting for messages to not go past local network
     # packet into single byte by struct
-    ttl = struct.pack('b', 1)
+    ttl = struct.pack('b', 3)
     multicast_sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
 
     try:
@@ -127,12 +127,15 @@ def multicast_search():
             try:
                 data, server = multicast_sock.recvfrom(16)
             except socket.timeout:
+                print('timed out, no more responses')
                 break
             else:
+                print(f'received server ip {data} from {server}')
                 # return server     # returns complete server info (server_ip, port)
                 return data  # returns data sent from server -- here localhost ip
 
     finally:
+        print('closing socket')
         multicast_sock.close()
 
 

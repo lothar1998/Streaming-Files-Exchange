@@ -24,6 +24,7 @@ logger.addHandler(handler)
 
 
 def create_daemon():
+    logger.info("Creating daemon process")
     server_module = Server(6969)
     server_module.start()
 
@@ -46,11 +47,15 @@ def sender_module_execute(client_socket, client_address, client_id, server):
     server.client_dictionary[client_id][0].shutdown(False)
 
 
+def multicast_thread_cleanup(multicast_thread):
+    logger.info("Closing multicast handler thread")
+    multicast_thread.shutdown(False)
+
+
 def multicast_handler(server):
+    logger.info("Starting multicast thread")
     multicast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     multicast_socket.bind(('', server.server_port))
-
-    logger.info(multicast_socket.getsockname()[0])
 
     group = socket.inet_aton(MULTICAST_GROUP)
     mreq = struct.pack('4sL', group, socket.INADDR_ANY)
@@ -77,13 +82,14 @@ class Server:
                 return x
 
     def start(self):
+        # try:
         logger.info("Server main thread has been started")
         # TODO: IPPROTO_SCTP
         main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
         main_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         main_socket.bind(("127.0.0.1", self.server_port))
 
-        multicast_thread = concurrent.futures.ThreadPoolExecutor(1)
+        multicast_thread = concurrent.futures.ThreadPoolExecutor(1, thread_name_prefix="multicast")
         multicast_thread.submit(multicast_handler, self)
 
         main_socket.listen(MAX_CLIENT_LISTEN)
@@ -100,10 +106,12 @@ class Server:
             logger.info("creating modules for client: %s", client_id)
             client_executor.submit(receiver_module_execute, client_socket, client_address, client_id, self)
             client_executor.submit(sender_module_execute, client_socket, client_address, client_id, self)
+        # except(KeyboardInterrupt, SystemExit):
+        #     multicast_thread_cleanup(multicast_thread)
 
 
 if __name__ == "__main__":
-    print("Running Server")
+    logger.info("Running server")
     uid = os.getuid()
     if uid == 0:
         # means that is root, so change it to 'normal user'
@@ -114,6 +122,10 @@ if __name__ == "__main__":
         # same for group
         gid = 20
 
+    if hasattr(os, "devnull"):
+        REDIRECT_TO = os.devnull
+    else:
+        REDIRECT_TO = "/dev/null"
     """
     DaemonContext:
         - detached=True,

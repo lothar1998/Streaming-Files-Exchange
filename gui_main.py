@@ -56,9 +56,15 @@ class gui():
                 self.client_module.close_connection()
 
         if self.server_address_input.get() == '':
-            self.server_IP = multicast_search().decode('utf-8')
-            self.server_address_input.delete(0, END)
-            self.server_address_input.insert(0, self.server_IP)
+            print(f"from function multicast: {multicast_search()}")
+            ip_addr = multicast_search()
+            if ip_addr is None:
+                messagebox.showinfo("Multicast server", f"Cannot reach server with multicast")
+                return
+            else:
+                self.server_IP = ip_addr.decode('utf-8')
+                self.server_address_input.delete(0, END)
+                self.server_address_input.insert(0, self.server_IP)
         else:
             self.server_IP = self.server_address_input.get()
 
@@ -149,7 +155,6 @@ class gui():
         self.server_address_label = Label(self.window, text="Server IP4 address ", font=("Arial Bold", 20))
         self.server_address_label.grid(column=0, row=2)
 
-        # TODO: set field from multicast
         self.server_address_input = Entry(self.window, width=17, text="plant", justify=CENTER, bd=5,
                                           font=("Arial Bold", 18))
         self.server_address_input.grid(column=1, row=2)
