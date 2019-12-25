@@ -27,9 +27,6 @@ def get_logger_file(name, file_path, log_level=logging.INFO):
     return logger
 
 
-logger = get_logger_file("basic_logger", "/var/log/log.log")
-
-
 class LoggerWrapper:
     def __init__(self, logger):
         self.logger = logger
@@ -78,6 +75,16 @@ class ServerDaemonContext(daemon.DaemonContext):
         devnull_out = open(redirect, 'w+')
         files_preserve.extend([devnull_in, devnull_out])
 
+        uid = os.getuid()
+        if uid == 0:
+            # means that is root, so change it to 'normal user'
+            uid = 501
+
+        gid = os.getgid()
+        if gid == 0:
+            # same for group
+            gid = 20
+
         daemon.DaemonContext.__init__(self,
                                       chroot_directory=chroot_directory,
                                       working_directory=working_directory,
@@ -109,12 +116,6 @@ class ServerDaemonContext(daemon.DaemonContext):
         if self.stderr_logger:
             logger_obj = LoggerWrapper(self.stderr_logger)
             sys.stderr = logger_obj
-
-
-def create_daemon():
-    logger.info("Creating daemon process")
-    server_module = Server(6969)
-    server_module.start()
 
 
 def receiver_module_execute(client_socket, client_address, client_id, server):
@@ -199,54 +200,19 @@ class Server:
 
 
 if __name__ == "__main__":
-    logger.info("Running server")
-    # testLogger = get_logger_file('test', '/var/log/test.log')
+    logger = get_logger_file("basic_logger", "/var/log/log.log")
     stdoutLogger = get_logger_file('stdout', '/var/log/stdout.log')
     stderrLogger = get_logger_file('stderr', '/var/log/stderr.log')
-    testFile = open('test.file', 'w')
 
-    logger.info('testLogger: before opening context')
-    stdoutLogger.info('stdoutLogger: before opening context')
-    stderrLogger.info('stderrLogger: before opening context')
-    testFile.write('testFile: hello to a file before context\n')
-
-    # -- get and configure the DaemonContext
-    uid = os.getuid()
-    if uid == 0:
-        # means that is root, so change it to 'normal user'
-        uid = 501
-
-    gid = os.getgid()
-    if gid == 0:
-        # same for group
-        gid = 20
-
-    context = ServerDaemonContext(uid=uid, gid=gid)
-    context.files_preserve = [testFile]
+    context = ServerDaemonContext()
     context.loggers_preserve = [logger]
     context.stdout_logger = stdoutLogger
     context.stderr_logger = stderrLogger
 
     with context:
+        logger.info("Running server")
+        # raise (Exception("stderrLogger: bummer!"))
+        print("Stdout test")
+
         server_module = Server(6969)
         server_module.start()
-        raise (Exception("stderrLogger: bummer!"))
-
-
-
-    #
-    # """
-    # DaemonContext:
-    #     - detached=True,
-    #     - working_directory='/'
-    #     - umask=0
-    #     - files_preserve=None # closes all opened descriptors
-    # """
-    # context = daemon.DaemonContext(uid=uid, gid=gid, stdin=REDIRECT_TO, stdout=REDIRECT_TO, stderr=REDIRECT_TO)
-    #
-    # devnull_in = open(os.devnull, 'r+')
-    # devnull_out = open(os.devnull, 'w+')
-    # context.files_preserve([devnull_in, devnull_out])
-    #
-    # with context:
-    #     create_daemon()
