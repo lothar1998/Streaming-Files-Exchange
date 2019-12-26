@@ -155,9 +155,9 @@ def multicast_handler(server):
     while True:
         _, address = multicast_socket.recvfrom(1024)
 
-        # server_ip = server.server_ip
-        server_ip = '127.0.0.1'
-        multicast_socket.sendto(bytes(server_ip, 'utf-8'), address)
+        # server_msg = 'ACK'
+        server_msg = '127.0.0.1'
+        multicast_socket.sendto(bytes(server_msg, 'utf-8'), address)
 
 
 class Server:
@@ -174,8 +174,7 @@ class Server:
     def start(self):
         global MULTICAST_THREAD
         logger.info("Server main thread has been started")
-        # TODO: IPPROTO_SCTP
-        main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
+        main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_SCTP)
         main_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         main_socket.bind(("127.0.0.1", self.server_port))
 
@@ -213,8 +212,8 @@ if __name__ == "__main__":
 
     with context:
         logger.info("Running server")
-        # raise (Exception("stderr_logger: exception!"))
-        print("Stdout test")
+        # raise (Exception("stderr test"))
+        # print("stdout test")
 
         server_module = Server(6969)
         server_module.start()
