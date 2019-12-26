@@ -10,10 +10,12 @@ import struct
 import daemon
 import os
 import sys
+import signal
 
 MAX_CLIENT_LISTEN = 10
 MAX_CLIENT_LOGGED = 256000
 MULTICAST_GROUP = '224.1.1.1'
+MULTICAST_THREAD = None
 
 
 def get_logger_file(name, file_path, log_level=logging.INFO):
@@ -31,11 +33,11 @@ class LoggerWrapper:
     def __init__(self, logger):
         self.logger = logger
 
-    def write(self, str):
-        str = str.rstrip()  # get rid of all tailing newlines and white space
-        if str:  # don't log emtpy lines
-            for line in str.split('\n'):
-                self.logger.critical(line)  # critical to log at any logLevel
+    def write(self, msg):
+        msg = msg.rstrip()
+        if msg:  # log only if msg not empty
+            for line in msg.split('\n'):
+                self.logger.critical(line)  # log independent of log level
 
     def flush(self):
         for handler in self.logger.handlers:
@@ -50,17 +52,15 @@ def open_logger_files(loggers):
     open_files = []
     for logger in loggers:
         for handler in logger.handlers:
-            if hasattr(handler, 'stream') and \
-                    hasattr(handler.stream, 'fileno'):
+            if hasattr(handler, 'stream') and hasattr(handler.stream, 'fileno'):
                 open_files.append(handler.stream)
     return open_files
 
 
 class ServerDaemonContext(daemon.DaemonContext):
-    def __init__(self, chroot_directory=None, working_directory='/', umask=0, uid=None, gid=None, prevent_core=True,
+    def __init__(self, chroot_directory=None, working_directory='/', umask=0, prevent_core=True,
                  detach_process=None, files_preserve=[], loggers_preserve=[], pidfile=None, stdout_logger=None,
-                 stderr_logger=None, signal_map=None
-                 ):
+                 stderr_logger=None, signal_map=None):
 
         self.stdout_logger = stdout_logger
         self.stderr_logger = stderr_logger
@@ -136,9 +136,11 @@ def sender_module_execute(client_socket, client_address, client_id, server):
     server.client_dictionary[client_id][0].shutdown(False)
 
 
-def multicast_thread_cleanup(multicast_thread):
-    logger.info("Closing multicast handler thread")
-    multicast_thread.shutdown(False)
+def server_cleanup(signum, stack):
+    global MULTICAST_THREAD
+    logger.info(f"RECEIVED {signum} : Cleaning up")
+    MULTICAST_THREAD.shutdown(False)
+    sys.exit(0)
 
 
 def multicast_handler(server):
@@ -156,7 +158,6 @@ def multicast_handler(server):
         # server_ip = server.server_ip
         server_ip = '127.0.0.1'
         multicast_socket.sendto(bytes(server_ip, 'utf-8'), address)
-    # TODO: shutdown thread
 
 
 class Server:
@@ -171,15 +172,18 @@ class Server:
                 return x
 
     def start(self):
-        # try:
+        global MULTICAST_THREAD
         logger.info("Server main thread has been started")
         # TODO: IPPROTO_SCTP
         main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP)
         main_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         main_socket.bind(("127.0.0.1", self.server_port))
 
-        multicast_thread = concurrent.futures.ThreadPoolExecutor(1, thread_name_prefix="multicast")
-        multicast_thread.submit(multicast_handler, self)
+        MULTICAST_THREAD = concurrent.futures.ThreadPoolExecutor(1)
+        MULTICAST_THREAD.submit(multicast_handler, self)
+
+        signal.signal(signal.SIGTERM, server_cleanup)
+        signal.signal(signal.SIGINT, server_cleanup)
 
         main_socket.listen(MAX_CLIENT_LISTEN)
         logger.info("Server listen at port: %s", self.server_port)
@@ -195,8 +199,6 @@ class Server:
             logger.info("creating modules for client: %s", client_id)
             client_executor.submit(receiver_module_execute, client_socket, client_address, client_id, self)
             client_executor.submit(sender_module_execute, client_socket, client_address, client_id, self)
-        # except(KeyboardInterrupt, SystemExit):
-        #     multicast_thread_cleanup(multicast_thread)
 
 
 if __name__ == "__main__":
@@ -211,7 +213,7 @@ if __name__ == "__main__":
 
     with context:
         logger.info("Running server")
-        # raise (Exception("stderrLogger: bummer!"))
+        # raise (Exception("stderr_logger: exception!"))
         print("Stdout test")
 
         server_module = Server(6969)
