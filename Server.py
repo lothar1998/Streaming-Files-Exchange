@@ -155,8 +155,7 @@ def multicast_handler(server):
     while True:
         _, address = multicast_socket.recvfrom(1024)
 
-        # server_msg = 'ACK'
-        server_msg = '127.0.0.1'
+        server_msg = 'ACK'
         multicast_socket.sendto(bytes(server_msg, 'utf-8'), address)
 
 
@@ -176,7 +175,13 @@ class Server:
         logger.info("Server main thread has been started")
         main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_SCTP)
         main_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        main_socket.bind(("127.0.0.1", self.server_port))
+
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        addr = s.getsockname()[0]
+        s.close()
+
+        main_socket.bind((addr, self.server_port))
 
         MULTICAST_THREAD = concurrent.futures.ThreadPoolExecutor(1)
         MULTICAST_THREAD.submit(multicast_handler, self)

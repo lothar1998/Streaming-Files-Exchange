@@ -62,7 +62,7 @@ class gui():
                 messagebox.showinfo("Multicast server", f"Cannot reach server with multicast")
                 return
             else:
-                self.server_IP = ip_addr.decode('utf-8')
+                self.server_IP = ip_addr
                 self.server_address_input.delete(0, END)
                 self.server_address_input.insert(0, self.server_IP)
         else:

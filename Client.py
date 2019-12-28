@@ -125,14 +125,14 @@ def multicast_search():
         multicast_sock.sendto(test_msg, multicast_group)
         while True:
             try:
-                data, server = multicast_sock.recvfrom(16)
+                data, server_addr = multicast_sock.recvfrom(16)
             except socket.timeout:
                 print('timed out, no more responses')
                 break
             else:
-                print(f'received server ip {data} from {server}')
-                # return server[0]     # returns real server ip
-                return data  # returns data sent from server -- here localhost ip
+                print(f'received server data: {data} from {server_addr}')
+                return server_addr[0]     # returns real server ip
+                # return data  # returns data sent from server -- here localhost ip
 
     finally:
         print('closing socket')
