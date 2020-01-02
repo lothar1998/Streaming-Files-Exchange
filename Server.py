@@ -206,9 +206,9 @@ class Server:
 
 
 if __name__ == "__main__":
-    logger = get_logger_file("basic_logger", "/var/log/log.log")
-    stdoutLogger = get_logger_file('stdout', '/var/log/stdout.log')
-    stderrLogger = get_logger_file('stderr', '/var/log/stderr.log')
+    logger = get_logger_file("basic_logger", "/var/log/stream_server.log")
+    stdoutLogger = get_logger_file('stdout', '/var/log/stream_server_stdout.log')
+    stderrLogger = get_logger_file('stderr', '/var/log/stream_server_stderr.log')
 
     context = ServerDaemonContext()
     context.loggers_preserve = [logger]
@@ -217,8 +217,6 @@ if __name__ == "__main__":
 
     with context:
         logger.info("Running server")
-        # raise (Exception("stderr test"))
-        # print("stdout test")
 
         server_module = Server(6969)
         server_module.start()
