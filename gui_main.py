@@ -145,7 +145,7 @@ class gui():
         self.window.geometry('610x400+700+500')
         self.window.minsize(610, 450)
         self.window.maxsize(610, 450)
-        self.downloaded_file_path = 'dupa'
+        self.downloaded_file_path = ''
 
         self.window.protocol("WM_DELETE_WINDOW", self.close_window)
 
