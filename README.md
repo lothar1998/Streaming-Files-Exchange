@@ -26,7 +26,6 @@ To run client GUI:
 ``python3 gui_main.py``
 
 
-![ui2](https://user-images.githubusercontent.com/33781380/72993778-40679200-3df6-11ea-883b-689ad3bcc6a3.png)
 
 ### Features
 
@@ -40,6 +39,9 @@ The server is collecting logs when performing a various actions and saves them t
 * */var/log/stream_server.log* – general logger file
 * */var/log/stream_server_stdout.log* –standard output stream
 * */var/log/stream_server_stderr.log* – standard error stream
+
+![ui2](https://user-images.githubusercontent.com/33781380/72993778-40679200-3df6-11ea-883b-689ad3bcc6a3.png)
+> Demo display
 
 ## Authors
 
