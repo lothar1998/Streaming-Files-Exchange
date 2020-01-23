@@ -6,8 +6,8 @@
 This is a repository for a university project on the **"Network Programming"** module.
 
 ### Description
-This application provide a streaming files between two clients through the server unit. Every exchange can be established between two clients in one moment. After termination client can request the server unit to establish exchange with another client than before.
-Project implementation is held with **Python 3.8**. Implementation is based on **SCTP** protocol.
+This application provides a streaming files between two clients through the server unit. Every exchange can be established between two clients in one moment. After termination client can request the server unit to establish exchange with another client than before.
+Project is implemented in **Python 3.8**. Implementation is based on **SCTP** protocol.
 Connection between clients is set by server. Server is required to establish connection. Every client is recognized by unique *ID* set by server. 
 
 
