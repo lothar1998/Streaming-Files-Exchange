@@ -1,5 +1,5 @@
 # Streaming Files Exchange
-![GitHub](https://img.shields.io/github/license/lothar1998/PS_Project) ![GitHub](https://img.shields.io/github/languages/top/lothar1998/PS_Project)  ![GitHub](https://img.shields.io/github/v/tag/lothar1998/PS_Project)  ![GitHub](https://img.shields.io/github/languages/code-size/lothar1998/PS_Project?color=yellow)
+![GitHub](https://img.shields.io/github/license/lothar1998/Streaming-Files-Exchange) ![GitHub](https://img.shields.io/github/languages/top/lothar1998/Streaming-Files-Exchange)  ![GitHub](https://img.shields.io/github/v/tag/lothar1998/PS_Project)  ![GitHub](https://img.shields.io/github/languages/code-size/lothar1998/PS_Project?color=yellow)
 
 ![GitHub](https://img.shields.io/github/stars/lothar1998/PS_Project?style=social) ![GitHub](https://img.shields.io/github/forks/lothar1998/PS_Project?style=social)
 
