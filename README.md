@@ -33,7 +33,7 @@ The server is running in the daemon process. When a client connects to the serve
 
 When in UI, one can provide valid server IP manually, or when leaving the field blank and hitting *"Connect"*, a multicast protocol is used to search for a running server in the local network.
 
-After picking a file to send and the destination user ID, *"send file"* button, the server sets up a connection between them and then the file is being sent.
+After choosing a file to send, typing in a destination user ID and pressing "Send File" button, the server sets up a connection and then the file is being sent.
 
 The server is collecting logs when performing a various actions and saves them to:
 * */var/log/stream_server.log* – general logger file
