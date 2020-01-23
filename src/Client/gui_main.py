@@ -3,8 +3,8 @@ from tkinter import *
 from tkinter import filedialog
 from tkinter import messagebox
 from tkinter.ttk import Progressbar
-from Client import Client as client
-from Client import multicast_search
+from src.Client.Client import Client as client
+from src.Client.Client import multicast_search
 import math
 import os
 import socket
@@ -102,9 +102,9 @@ class gui():
 
     def stop_sending(self):
         self.client_module.sending_interrupted = True
-        self.progress_bar_text.config(text="Progress : " + str(0) + " %")  # TODO does not work updating progress bar
-        self.bar["value"] = 0  # TODO does not work updating progress bar
-        self.bar.update()  # TODO does not work updating progress bar
+        self.progress_bar_text.config(text="Progress : " + str(0) + " %")
+        self.bar["value"] = 0
+        self.bar.update()
         self.ip_button_connect.config(state=NORMAL)
         self.browser_button_file.config(state=NORMAL)
         self.send_file.config(state=NORMAL)

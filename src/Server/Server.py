@@ -3,8 +3,8 @@ import concurrent.futures
 import socket
 import random
 import threading
-from ServerReceiverModule import ServerReceiverModule
-from ServerSendModule import ServerSendModule
+from src.Server.ServerReceiverModule import ServerReceiverModule
+from src.Server.ServerSendModule import ServerSendModule
 import queue
 import struct
 import daemon
